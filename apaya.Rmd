@@ -1,0 +1,115 @@
+---
+title: "Fraud_Spark"
+author: "Rizal Mujahiddan"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(sets)
+library(dplyr)
+library(sparklyr)
+library(ggplot2)
+library(nycflights13)
+library(tidyr)
+```
+
+```{r}
+sc <- spark_connect(master = "local")
+app_df_curr <- spark_read_csv(sc,
+                              name="data_curr",
+                              path="application_data.csv"
+                              )
+app_df_prev <- spark_read_csv(sc,
+                              name="data_prev",
+                              path="previous_application.csv"
+                              )
+
+print(head(app_df_curr))
+print(head(app_df_prev))
+```
+```{r}
+print("Shape Current")
+print(sdf_dim(app_df_curr))
+
+print("Shape Previously")
+print(sdf_dim(app_df_prev))
+```
+
+```{r}
+missing_values <- app_df_curr %>%
+  summarise_all(~ mean(ifelse(is.na(.), 1, 0)) * 100) %>%
+  pivot_longer(cols = everything(), names_to = "column_name", values_to = "missing_percentage") %>%
+  arrange(desc(missing_percentage))
+
+missing_values
+```
+
+```{r}
+missing_values <- missing_values %>% 
+                    arrange(desc(missing_percentage)) %>% 
+                    filter(missing_percentage != 0)
+missing_values
+
+```
+
+```{r , fig.width=8,fig.height=6}
+ggplot(missing_values, 
+       aes(x = reorder(column_name,(missing_percentage)),
+           y = missing_percentage
+           )
+       ) + 
+  geom_bar(stat="identity") +
+  labs(title = "Missing Value Percentage by Variable",
+       subtitle = "Sorted by Missing Value Percentage") +
+  theme(axis.text.y=element_text(size=4)) +
+  coord_flip() +
+  geom_abline(intercept=50,slope=0,col="blue")
+```
+
+```{r}
+missing_values <- missing_values %>% collect()
+col_drop <- missing_values %>% 
+  filter(missing_percentage > 20) %>%
+  pull(column_name)
+col_drop
+```
+```{r}
+app_df_curr <- app_df_curr %>%
+                  select(-all_of(col_drop))
+sdf_dim(app_df_curr)
+```
+```{r}
+as.set(colnames(app_df_curr)) &
+as.set(colnames(app_df_prev))
+```
+```{r}
+merge_df <- inner_join(app_df_curr,app_df_prev,
+                 by="SK_ID_CURR")
+sdf_dim(merge_df)
+```
+
+```{r}
+merge_df %>% select(sort(colnames(merge_df)))
+```
+
+```{r}
+missing_value <- merge_df %>%
+  summarise_all(~ mean(ifelse(is.na(.), 1, 0)) * 100) %>%
+  pivot_longer(cols = everything(), names_to = "column_name", values_to = "missing_percentage") %>%
+  arrange(desc(missing_percentage))
+
+missing_value <- missing_value %>% collect()
+
+missing_value <- missing_value %>% filter(missing_percentage>20) %>% select(column_name)
+missing_value
+```
+```{r}
+merge_df 
+```
+
+

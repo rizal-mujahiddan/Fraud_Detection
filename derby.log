@@ -1,0 +1,13 @@
+----------------------------------------------------------------
+Wed Jun 28 07:54:28 ICT 2023:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.2.0 - (1828579): instance a816c00e-0188-ff7e-9fe0-00000e035e60 
+on database directory memory:C:\Users\ASUS\Documents\data_mining\Fraud_Detection\databaseName=metastore_db with class loader org.apache.spark.sql.hive.client.IsolatedClientLoader$$anon$1@2accabad 
+Loaded from file:/C:/Users/ASUS/AppData/Local/spark/spark-3.4.0-bin-hadoop3/jars/derby-10.14.2.0.jar
+java.vendor=Oracle Corporation
+java.runtime.version=1.8.0_211-b12
+user.dir=C:\Users\ASUS\Documents\data_mining\Fraud_Detection
+os.name=Windows 10
+os.arch=amd64
+os.version=10.0
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
